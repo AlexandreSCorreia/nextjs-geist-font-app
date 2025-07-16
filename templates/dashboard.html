@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Financeiro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard Financeiro</h1>
+            <p class="text-gray-600">Acompanhe o desempenho do seu bot de trading</p>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Lucro -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div class="text-sm font-medium text-gray-500 mb-1">TOTAL LUCRO</div>
+                <div class="text-2xl font-bold text-green-600">+R$ {{ "{:,.0f}".format(data.metrics.total_lucro) }}</div>
+            </div>
+
+            <!-- Total Perda -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div class="text-sm font-medium text-gray-500 mb-1">TOTAL PERDA</div>
+                <div class="text-2xl font-bold text-red-600">- R$ {{ "{:,.0f}".format(-data.metrics.total_perda) }}</div>
+            </div>
+
+            <!-- Total Operações -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div class="text-sm font-medium text-gray-500 mb-1">TOTAL OPERAÇÕES</div>
+                <div class="text-2xl font-bold text-gray-900">{{ data.metrics.total_operacoes }}</div>
+            </div>
+
+            <!-- Total Operações do Dia -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div class="text-sm font-medium text-gray-500 mb-1">TOTAL OPERAÇÕES DO DIA</div>
+                <div class="text-2xl font-bold text-gray-900">{{ data.metrics.total_operacoes_dia }}</div>
+            </div>
+        </div>
+
+        <!-- Second Row Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Lucro do Dia -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div class="text-sm font-medium text-gray-500 mb-1">TOTAL LUCRO DO DIA</div>
+                <div class="text-2xl font-bold text-green-600">+ R$ {{ "{:,.0f}".format(data.metrics.total_lucro_dia) }}</div>
+            </div>
+
+            <!-- Total Perda do Dia -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div class="text-sm font-medium text-gray-500 mb-1">TOTAL PERDA DO DIA</div>
+                <div class="text-2xl font-bold text-gray-900">- {{ -data.metrics.total_perda_dia }}</div>
+            </div>
+
+            <!-- Operações Win -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div class="text-sm font-medium text-gray-500 mb-1">OPERAÇÕES WIN</div>
+                <div class="text-2xl font-bold text-green-600">{{ data.metrics.operacoes_win }}</div>
+            </div>
+
+            <!-- Operações Loss -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div class="text-sm font-medium text-gray-500 mb-1">OPERAÇÕES LOSS</div>
+                <div class="text-2xl font-bold text-red-600">{{ data.metrics.operacoes_loss }}</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Desempenho nos Anos -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">DESEMPENHO DO BOT NOS ANOS</h3>
+                <div class="h-64">
+                    <canvas id="anosChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Desempenho nos Meses -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">DESEMPENHO DO BOT NOS MESES</h3>
+                <div class="h-64">
+                    <canvas id="mesesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Desempenho nos Dias -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">DESEMPENHO DO BOT NOS DIAS</h3>
+                <div class="h-64">
+                    <canvas id="diasChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Desempenho nas Últimas 24H -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">DESEMPENHO DO BOT NAS ÚLTIMAS 24H</h3>
+                <div class="h-64">
+                    <canvas id="horasChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200 mb-6">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Filtrar</label>
+                    <select class="border border-gray-300 rounded px-3 py-1 text-sm">
+                        <option>15</option>
+                        <option>25</option>
+                        <option>50</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-700">per tas</span>
+                    <select class="border border-gray-300 rounded px-3 py-1 text-sm">
+                        <option>95gina</option>
+                    </select>
+                </div>
+                <div class="ml-auto">
+                    <select class="border border-gray-300 rounded px-3 py-1 text-sm">
+                        <option>Jatesco</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Operations Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbol</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resultado</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fechamento</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PNL (R$)</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% PnL</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capital</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alavancagem</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for op in data.operations %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ op.data }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ op.symbol }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="px-2 py-1 text-xs rounded-full {% if op.tipo == 'Long' %}bg-blue-100 text-blue-800{% else %}bg-purple-100 text-purple-800{% endif %}">
+                                    {{ op.tipo }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="font-medium {% if op.resultado == 'Win' %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {{ op.resultado }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ "%.3f"|format(op.entrada) }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ "%.3f"|format(op.fechamento) }}</td>
+                            <td class="px-4 py-3 text-sm {% if op.pnl > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                {{ "%.2f"|format(op.pnl) }}
+                            </td>
+                            <td class="px-4 py-3 text-sm {% if op.pnl_percent > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                {{ "%.2f"|format(op.pnl_percent) }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ "%.3f"|format(op.capital) }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{ op.alavancagem }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart data from Flask
+        const chartData = {
+            anos: {
+                labels: {{ data.charts.anos.labels | tojson | safe }},
+                data: {{ data.charts.anos.data | tojson | safe }}
+            },
+            meses: {
+                labels: {{ data.charts.meses.labels | tojson | safe }},
+                data: {{ data.charts.meses.data | tojson | safe }}
+            },
+            dias: {
+                labels: {{ data.charts.dias.labels | tojson | safe }},
+                data: {{ data.charts.dias.data | tojson | safe }}
+            },
+            horas: {
+                labels: {{ data.charts.horas.labels | tojson | safe }},
+                data: {{ data.charts.horas.data | tojson | safe }}
+            }
+        };
+
+        // Chart configurations
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f3f4f6'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: '#f3f4f6'
+                    }
+                }
+            }
+        };
+
+        // Anos Chart
+        const anosCtx = document.getElementById('anosChart').getContext('2d');
+        new Chart(anosCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.anos.labels,
+                datasets: [{
+                    data: chartData.anos.data,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Meses Chart
+        const mesesCtx = document.getElementById('mesesChart').getContext('2d');
+        new Chart(mesesCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.meses.labels,
+                datasets: [{
+                    data: chartData.meses.data,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Dias Chart
+        const diasCtx = document.getElementById('diasChart').getContext('2d');
+        new Chart(diasCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.dias.labels,
+                datasets: [{
+                    data: chartData.dias.data,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Horas Chart (Bar Chart)
+        const horasCtx = document.getElementById('horasChart').getContext('2d');
+        new Chart(horasCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.horas.labels,
+                datasets: [{
+                    data: chartData.horas.data,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }]
+            },
+            options: chartOptions
+        });
+    </script>
+</body>
+</html>
